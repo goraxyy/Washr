@@ -1,6 +1,17 @@
 name: PlatformIO CI
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  # Pull requests, including ones from forks, are built before they merge.
+  # Under the old `on: [push]` a PR from a fork never ran CI here at all.
+  pull_request:
+  workflow_dispatch:
+  # Weekly build so the badge reflects today's toolchain and libraries
+  # even when nobody pushes. `platform = espressif32` and the `^` lib
+  # versions float, so a build can break without any commit here.
+  schedule:
+    - cron: '0 12 * * 1'
 
 jobs:
   build:
@@ -13,7 +24,8 @@ jobs:
           path: |
             ~/.cache/pip
             ~/.platformio/.cache
-          key: ${{ runner.os }}-pio
+          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}
+          restore-keys: ${{ runner.os }}-pio-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
